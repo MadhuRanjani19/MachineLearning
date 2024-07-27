@@ -1,0 +1,66 @@
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+
+# Generate synthetic dataset
+np.random.seed(42)
+data_size = 1000
+
+income = np.random.normal(50000, 15000, data_size).astype(int)
+debt = np.random.normal(15000, 5000, data_size).astype(int)
+num_accounts = np.random.randint(1, 10, data_size)
+credit_score_category = np.random.choice(['Excellent', 'Good', 'Fair', 'Poor'], data_size, p=[0.25, 0.35, 0.25, 0.15])
+
+# Create DataFrame
+df = pd.DataFrame({
+    'income': income,
+    'debt': debt,
+    'num_accounts': num_accounts,
+    'credit_score_category': credit_score_category
+})
+
+# Display the first few rows of the dataset
+print(df.head())
+
+# Preprocess the data
+# Handle missing values if any (not needed here as synthetic data has no missing values)
+# df.fillna(method='ffill', inplace=True)
+
+# Encode categorical variables
+le = LabelEncoder()
+df['credit_score_category'] = le.fit_transform(df['credit_score_category'])
+
+# Split data into features (X) and target (y)
+X = df.drop('credit_score_category', axis=1)
+y = df['credit_score_category']
+
+# Split the dataset into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Standardize the features
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# Train a Random Forest classifier
+clf = RandomForestClassifier(n_estimators=100, random_state=42)
+clf.fit(X_train, y_train)
+
+# Make predictions
+y_pred = clf.predict(X_test)
+
+# Evaluate the model
+print("\nConfusion Matrix:")
+print(confusion_matrix(y_test, y_pred))
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred))
+print("\nAccuracy Score:")
+print(accuracy_score(y_test, y_pred))
+
+# Optional: Feature Importance
+feature_importances = pd.Series(clf.feature_importances_, index=X.columns)
+print("\nFeature Importances:")
+print(feature_importances.sort_values(ascending=False))
